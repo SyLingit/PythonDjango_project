@@ -1,6 +1,8 @@
 #coding:utf-8
 __author__ = "ila"
 import copy
+import hashlib
+
 from django.http import JsonResponse
 from django.apps import apps
 from django.db.models.aggregates import Count,Sum
@@ -13,8 +15,20 @@ def huiyuan_register(request):
     if request.method in ["POST", "GET"]:
         msg = {'code': normal_code, "msg": mes.normal_code}
         req_dict = request.session.get("req_dict")
+        params = {}
+        for key, value in req_dict.items():
+            if key == 'yonghuming':
+                params['yonghuming'] = value
+            if key == 'xingming':
+                params['xingming'] = value
+            if key == 'mima':
+                params['mima'] = hashlib.md5(value.encode('utf-8')).hexdigest()
+            if key == 'shouji':
+                params['shouji'] = value
+            if key == 'chepai':
+                params['chepai'] = value
 
-        error = huiyuan.createbyreq(huiyuan, huiyuan, req_dict)
+        error = huiyuan.createbyreq(huiyuan, huiyuan, params)
         if error != None:
             msg['code'] = crud_error_code
             msg['msg'] = "用户已存在,请勿重复注册!"
@@ -25,6 +39,7 @@ def huiyuan_login(request):
         msg = {'code': normal_code, "msg": mes.normal_code}
         req_dict = request.session.get("req_dict")
 
+        req_dict['password'] = hashlib.md5(req_dict['password'].encode('utf-8')).hexdigest()
         datas = huiyuan.getbyparams(huiyuan, huiyuan, req_dict)
         if not datas:
             msg['code'] = password_error_code
